@@ -6,54 +6,43 @@
     <title>Bitácora Financiera</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0f172a; }
-        iframe { width: 100%; height: 100%; border: none; display: block; }
+        iframe { width: 100%; height: 100%; border: none; display: none; }
+        .cargando {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            background: #0f172a; color: #94a3b8;
+            font-family: Arial, sans-serif; font-size: 15px;
+        }
         .tapa-banner {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 60px;
-            background: #0f172a;
-            z-index: 999999;
-            pointer-events: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+            background: #0f172a; z-index: 999999; pointer-events: none; display: none;
         }
     </style>
 </head>
 <body>
-    <iframe id="app-frame" src="about:blank"></iframe>
-    <div class="tapa-banner"></div>
+    <div class="cargando" id="cargando">Cargando Bitácora Financiera…</div>
+    <iframe id="app-frame" src="https://script.google.com/macros/s/AKfycbxXnoAlyIGQn7k7Buik1cIidwr9i5g_CWnVCl6LqOa4jn3eHPvagw4kjkCb1OamRualNw/exec"></iframe>
+    <div class="tapa-banner" id="tapa"></div>
     <script>
     (function() {
-        var APP_URL = 'https://script.google.com/macros/s/AKfycbwBN0YwJONB6lpUg3i3yNwm6P05zUxZLoR4k3o5StDAvQVPXOtXLdCKuZ_xz_9EJarUpA/exec';
-
-        // 1. Intentar cargar la app en el iframe.
-        // 2. Si la carga falla (401 = usuario no autorizado), redirigir
-        //    la página completa a la app para que Google pida permisos.
+        var APP_URL = 'https://script.google.com/macros/s/AKfycbxXnoAlyIGQn7k7Buik1cIidwr9i5g_CWnVCl6LqOa4jn3eHPvagw4kjkCb1OamRualNw/exec';
         var frame = document.getElementById('app-frame');
-        frame.onload = function() {
-            // Si el iframe cargó, verificar si el contenido es la app real.
-            // Si Google muestra su página de error (401), el iframe carga
-            // igual, así que no hay forma de detectarlo aquí.
-        };
-        frame.onerror = function() {
-            window.location.href = APP_URL;
-        };
+        var cargando = document.getElementById('cargando');
+        var tapa = document.getElementById('tapa');
+        var recibido = false;
 
-        // Cargar la app.
-        frame.src = APP_URL;
+        window.addEventListener('message', function(e) {
+            if (e.data === 'bitacora-ready') {
+                recibido = true;
+                cargando.style.display = 'none';
+                frame.style.display = 'block';
+                tapa.style.display = 'block';
+            }
+        });
 
-        // Timeout: si en 3 segundos no se ha autorizado, redirigir.
-        // Esto cubre el caso del 401 que no dispara onerror.
         setTimeout(function() {
-            try {
-                // Si el iframe está vacío o cross-origin sin cargar, redirigir.
-                var doc = frame.contentDocument;
-                if (!doc || doc.location.href === 'about:blank') {
-                    window.location.href = APP_URL;
-                }
-            } catch (e) {
-                // Cross-origin normal: significa que la app cargó bien.
-                // No redirigir.
+            if (!recibido) {
+                window.location.href = APP_URL;
             }
         }, 3000);
     })();
