@@ -1,62 +1,126 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Bitácora Financiera</title>
-<style>
-html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#0f172a; }
-#app {
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  border:0; z-index:10; display:block;
-}
-#cortina {
-  position:fixed; top:0; left:0; width:100%; height:140px;
-  background:#0f172a; z-index:2147483647; pointer-events:none;
-}
-#cargando {
-  position:fixed; top:0; left:0; width:100%; height:100%;
-  display:flex; justify-content:center; align-items:center;
-  background:#0f172a; color:#94a3b8; font-family:sans-serif;
-  font-size:15px; z-index:20;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bitácora Financiera</title>
+    <style>
+        html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#0f172a; }
+        
+        /* Contenedor principal que ocupa toda la pantalla */
+        #contenedor-app {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+
+        /* El iframe que carga tu aplicación real */
+        #app {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
+
+        /* La cortina que tapa el banner azul de Google */
+        #cortina {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 140px;
+            background: #0f172a;
+            z-index: 2147483647;
+            pointer-events: none;
+        }
+
+        /* Capa de carga / autorización (superposición) */
+        #capa-login {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f172a;
+            color: #94a3b8;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: sans-serif;
+            z-index: 30; /* Por encima de la app */
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #capa-login h2 { color: #f8fafc; }
+        #capa-login a { color: #38bdf8; text-decoration: none; font-weight: 600; cursor: pointer; }
+        #capa-login a:hover { text-decoration: underline; }
+    </style>
 </head>
 <body>
-<div id="cargando">Cargando…</div>
-<iframe id="app" src="about:blank" allow="storage-access *; clipboard-read; clipboard-write"></iframe>
-<div id="cortina"></div>
-<script>
-(function(){
-  var APP_URL = 'https://script.google.com/macros/s/AKfycbyumXfpDlgpBlUPcDN1qCv3-oZ9iUrKWk2sFhSGW7AouLOl_vnkbTPX-EtXoKH4e1JzYg/exec';
-  var f = document.getElementById('app');
-  var c = document.getElementById('cargando');
-  var ok = false;
 
-  // Tu app envía este mensaje al final del Index.
-  // Solo llega si la app cargó DE VERDAD (no si Google devolvió el 401).
-  window.addEventListener('message', function(ev){
-    if (ev && ev.data === 'bitacora-ready') {
-      ok = true;
-      c.style.display = 'none';
-    }
-  });
+    <!-- Capa de login: se oculta si el JSONP confirma que ya hay sesión -->
+    <div id="capa-login">
+        <h2>Cargando Bitácora…</h2>
+        <p>Si no carga automáticamente, <a id="enlace-manual" href="#">haz clic aquí para autorizar</a>.</p>
+    </div>
 
-  function redirigir(){
-    if (ok) return;
-    window.location.replace(APP_URL);
-  }
+    <!-- La aplicación real, oculta tras la cortina -->
+    <div id="contenedor-app">
+        <iframe id="app" src="about:blank" allow="storage-access *; clipboard-read; clipboard-write"></iframe>
+        <div id="cortina"></div>
+    </div>
 
-  // Intento de saltar bloqueo de cookies de terceros.
-  if (document.requestStorageAccess) {
-    document.requestStorageAccess().catch(function(){});
-  }
+    <script>
+        (function() {
+            var APP_URL = 'https://script.google.com/macros/s/AKfycbyGz6IzUHvdg5JTf7PM_6xqBHexL8cxJ2LlWXTPUsGxbdcvinuxY30PRuSf7VJzbGH2rA/exec';
+            var iframe = document.getElementById('app');
+            var capaLogin = document.getElementById('capa-login');
+            var enlaceManual = document.getElementById('enlace-manual');
+            var decidido = false;
 
-  f.src = APP_URL;
+            // Enlace de respaldo por si el JSONP no funciona
+            enlaceManual.href = APP_URL;
+            enlaceManual.addEventListener('click', function(ev) {
+                ev.preventDefault();
+                window.location.href = APP_URL;
+            });
 
-  // Si en 6s tu app no ha confirmado, es 401 → redirigir (banner visible, pero app usable).
-  setTimeout(redirigir, 6000);
-})();
-</script>
+            // 1. Esta función la llama tu Apps Script si el usuario YA está autorizado.
+            //    Su nombre debe coincidir con el parámetro 'callback' de abajo.
+            window.authSuccess = function() {
+                if (decidido) return;
+                decidido = true;
+                // El usuario ya tiene sesión: mostramos el iframe y ocultamos la capa de login.
+                iframe.src = APP_URL;
+                capaLogin.style.display = 'none';
+            };
+
+            // 2. Función de respaldo: si el JSONP falla en X segundos, redirigimos.
+            function fallbackRedirect() {
+                if (decidido) return;
+                decidido = true;
+                window.location.replace(APP_URL);
+            }
+
+            // 3. Cargamos el Apps Script como JSONP.
+            //    Si el script carga, significa que el usuario está autenticado.
+            var s = document.createElement('script');
+            s.src = APP_URL + '?callback=authSuccess&_t=' + Date.now();
+            s.onerror = function() {
+                // Si falla, es probable que el usuario no esté autenticado.
+                // Redirigimos para que lo haga.
+                fallbackRedirect();
+            };
+            document.body.appendChild(s);
+
+            // 4. Red de seguridad: si en 6 segundos no hay respuesta, redirigimos.
+            setTimeout(fallbackRedirect, 6000);
+        })();
+    </script>
 </body>
 </html>
