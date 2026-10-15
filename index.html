@@ -1,75 +1,135 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Bitácora Financiera</title>
+
   <style>
-    :root { --crop: 60px; }
-    html, body { margin: 0; height: 100%; overflow: hidden; background: #0f172a; }
-    #wrap { position: fixed; inset: 0; overflow: hidden; }
-    #app {
-  position: absolute;
-  top: calc(-1 * var(--crop));
-  left: 0;
-  width: 100%;
-  height: calc(100% + var(--crop));
-  border: 0;
-  display: none;
-}   
-    #cargando {
-      position: fixed; inset: 0;
-      display: flex; justify-content: center; align-items: center;
-      background: #0f172a; color: #94a3b8;
-      font-family: Arial, sans-serif; font-size: 15px;
+    :root {
+      --crop: 110px;
     }
-    @media (max-width: 600px) { :root { --crop: 80px; } }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0f172a;
+    }
+
+    #wrap {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      background: #0f172a;
+    }
+
+    #app {
+      position: absolute;
+      top: calc(-1 * var(--crop));
+      left: 0;
+      width: 100%;
+      height: calc(100% + var(--crop));
+      border: 0;
+      display: none;
+      background: #fff;
+    }
+
+    #detector {
+      display: none;
+    }
+
+    #cargando {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #0f172a;
+      color: #94a3b8;
+      font-family: Arial, sans-serif;
+      font-size: 15px;
+    }
+
+    @media (max-width: 600px) {
+      :root {
+        --crop: 110px;
+      }
+    }
   </style>
 </head>
+
 <body>
   <div id="wrap">
-    <iframe id="app" title="Bitácora Financiera" allow="clipboard-write; fullscreen"></iframe>
-    <iframe id="detector" style="display:none;"></iframe>
+    <iframe
+      id="app"
+      title="Bitácora Financiera"
+      allow="clipboard-write; fullscreen">
+    </iframe>
+
+    <iframe id="detector"></iframe>
+
     <div id="cargando">Verificando acceso…</div>
   </div>
 
   <script>
-    var APP_URL = "https://script.google.com/macros/s/AKfycbyKi-k-89v1osCeg1F7l2iPGMpt6gDyczV2ba5okcbNGODBNnr5lZhSp1XXdkQ2O-wvUQ/exec";
+    const APP_URL = "https://script.google.com/macros/s/AKfycbyKi-k-89v1osCeg1F7l2iPGMpt6gDyczV2ba5okcbNGODBNnr5lZhSp1XXdkQ2O-wvUQ/exec";
 
-    // Calibración: tusitio.github.io/repo/?crop=90
-    var crop = new URLSearchParams(location.search).get("crop");
-    if (crop && /^\d+$/.test(crop)) {
-      document.documentElement.style.setProperty("--crop", crop + "px");
+    // Permite ajustar el recorte desde la URL: ?crop=110
+    const params = new URLSearchParams(window.location.search);
+    const crop = params.get("crop");
+
+    if (crop !== null && /^\d+$/.test(crop)) {
+      document.documentElement.style.setProperty(
+        "--crop",
+        crop + "px"
+      );
     }
 
-    var app = document.getElementById("app");
-    var detector = document.getElementById("detector");
-    var cargando = document.getElementById("cargando");
-    var decidido = false;
+    const app = document.getElementById("app");
+    const detector = document.getElementById("detector");
+    const cargando = document.getElementById("cargando");
 
-    detector.onload = function() {
+    let decidido = false;
+
+    function mostrarAplicacion() {
       if (decidido) return;
+
       decidido = true;
+      cargando.style.display = "none";
+      app.src = APP_URL;
+      app.style.display = "block";
+    }
+
+    function redirigirAplicacion() {
+      if (decidido) return;
+
+      decidido = true;
+      window.location.replace(APP_URL);
+    }
+
+    detector.onload = function () {
+      if (decidido) return;
+
       try {
         if (detector.contentWindow.length > 0) {
-          // Autenticado: mostrar la app (banner tapado por --crop)
-          cargando.style.display = "none";
-          app.src = APP_URL;
-          app.style.display = "block";
+          mostrarAplicacion();
         } else {
-          // No autenticado: redirigir la página completa
-          window.location.replace(APP_URL);
+          redirigirAplicacion();
         }
-      } catch (e) {
-        window.location.replace(APP_URL);
+      } catch (error) {
+        redirigirAplicacion();
       }
     };
 
-    // Timeout de seguridad: 4 segundos.
-    setTimeout(function() {
+    // Si la comprobación tarda demasiado, abre la aplicación.
+    // Evita una redirección automática por un simple retraso.
+    setTimeout(function () {
       if (!decidido) {
-        decidido = true;
-        window.location.replace(APP_URL);
+        mostrarAplicacion();
       }
     }, 4000);
 
