@@ -1,126 +1,73 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bitácora Financiera</title>
-    <style>
-        html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#0f172a; }
-        
-        /* Contenedor principal que ocupa toda la pantalla */
-        #contenedor-app {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-        }
-
-        /* El iframe que carga tu aplicación real */
-        #app {
-            width: 100%;
-            height: 100%;
-            border: 0;
-            display: block;
-        }
-
-        /* La cortina que tapa el banner azul de Google */
-        #cortina {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 140px;
-            background: #0f172a;
-            z-index: 2147483647;
-            pointer-events: none;
-        }
-
-        /* Capa de carga / autorización (superposición) */
-        #capa-login {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0f172a;
-            color: #94a3b8;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-family: sans-serif;
-            z-index: 30; /* Por encima de la app */
-            text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        #capa-login h2 { color: #f8fafc; }
-        #capa-login a { color: #38bdf8; text-decoration: none; font-weight: 600; cursor: pointer; }
-        #capa-login a:hover { text-decoration: underline; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bitácora Financiera</title>
+<style>
+html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#0f172a; }
+#app { position:fixed; top:0; left:0; width:100%; height:100%; border:0; z-index:10; display:none; }
+#cortina { position:fixed; top:0; left:0; width:100%; height:140px; background:#0f172a; z-index:2147483647; pointer-events:none; display:none; }
+#inicio {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  background:#0f172a; color:#f8fafc; font-family:sans-serif; z-index:20; text-align:center; padding:24px; box-sizing:border-box;
+}
+#inicio h2 { font-size:20px; margin:0 0 8px; }
+#inicio p { color:#94a3b8; font-size:14px; margin:0 0 24px; }
+#btnEntrar {
+  padding:14px 32px; border-radius:10px; border:none; background:#0284c7; color:#fff;
+  font-size:16px; font-weight:600; cursor:pointer;
+}
+#btnEntrar:disabled { opacity:0.6; cursor:wait; }
+</style>
 </head>
 <body>
 
-    <!-- Capa de login: se oculta si el JSONP confirma que ya hay sesión -->
-    <div id="capa-login">
-        <h2>Cargando Bitácora…</h2>
-        <p>Si no carga automáticamente, <a id="enlace-manual" href="#">haz clic aquí para autorizar</a>.</p>
-    </div>
+<div id="inicio">
+  <h2>Bitácora Financiera</h2>
+  <p>Haz clic para entrar</p>
+  <button id="btnEntrar">Entrar</button>
+</div>
 
-    <!-- La aplicación real, oculta tras la cortina -->
-    <div id="contenedor-app">
-        <iframe id="app" src="about:blank" allow="storage-access *; clipboard-read; clipboard-write"></iframe>
-        <div id="cortina"></div>
-    </div>
+<iframe id="app" src="about:blank"></iframe>
+<div id="cortina"></div>
 
-    <script>
-        (function() {
-            var APP_URL = 'https://script.google.com/macros/s/AKfycbzxEalV4dhRmowsOK2_YOay1P6Lc-a9H0Dm_d9kmaQfdWkn7Bn553rSZ3XaZw6LMJnvbQ/exec';
-            var iframe = document.getElementById('app');
-            var capaLogin = document.getElementById('capa-login');
-            var enlaceManual = document.getElementById('enlace-manual');
-            var decidido = false;
+<script>
+(function() {
+  var APP_URL = 'https://script.google.com/macros/s/AKfycbzxEalV4dhRmowsOK2_YOay1P6Lc-a9H0Dm_d9kmaQfdWkn7Bn553rSZ3XaZw6LMJnvbQ/exec';
+  var app = document.getElementById('app');
+  var cortina = document.getElementById('cortina');
+  var inicio = document.getElementById('inicio');
+  var btn = document.getElementById('btnEntrar');
 
-            // Enlace de respaldo por si el JSONP no funciona
-            enlaceManual.href = APP_URL;
-            enlaceManual.addEventListener('click', function(ev) {
-                ev.preventDefault();
-                window.location.href = APP_URL;
-            });
+  function cargarApp() {
+    inicio.style.display = 'none';
+    app.style.display = 'block';
+    cortina.style.display = 'block';
+    app.src = APP_URL;
+  }
 
-            // 1. Esta función la llama tu Apps Script si el usuario YA está autorizado.
-            //    Su nombre debe coincidir con el parámetro 'callback' de abajo.
-            window.authSuccess = function() {
-                if (decidido) return;
-                decidido = true;
-                // El usuario ya tiene sesión: mostramos el iframe y ocultamos la capa de login.
-                iframe.src = APP_URL;
-                capaLogin.style.display = 'none';
-            };
+  btn.addEventListener('click', function() {
+    btn.disabled = true;
+    btn.innerText = 'Cargando…';
 
-            // 2. Función de respaldo: si el JSONP falla en X segundos, redirigimos.
-            function fallbackRedirect() {
-                if (decidido) return;
-                decidido = true;
-                window.location.replace(APP_URL);
-            }
-
-            // 3. Cargamos el Apps Script como JSONP.
-            //    Si el script carga, significa que el usuario está autenticado.
-            var s = document.createElement('script');
-            s.src = APP_URL + '?callback=authSuccess&_t=' + Date.now();
-            s.onerror = function() {
-                // Si falla, es probable que el usuario no esté autenticado.
-                // Redirigimos para que lo haga.
-                fallbackRedirect();
-            };
-            document.body.appendChild(s);
-
-            // 4. Red de seguridad: si en 6 segundos no hay respuesta, redirigimos.
-            setTimeout(fallbackRedirect, 6000);
-        })();
-    </script>
+    // El truco: pedir permiso de cookies para script.google.com
+    // desde github.io. Requiere clic del usuario (esto lo da el botón).
+    if (document.requestStorageAccessFor) {
+      document.requestStorageAccessFor('https://script.google.com')
+        .then(cargarApp)
+        .catch(function() { cargarApp(); });
+    } else if (document.requestStorageAccess) {
+      // Fallback: pedir para el dominio propio
+      document.requestStorageAccess()
+        .then(cargarApp)
+        .catch(function() { cargarApp(); });
+    } else {
+      cargarApp();
+    }
+  });
+})();
+</script>
 </body>
 </html>
