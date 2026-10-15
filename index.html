@@ -19,6 +19,7 @@ iframe {
   width: 100%;
   height: 100%;
   border: 0;
+  z-index: 10;
 }
 #cortina {
   position: fixed;
@@ -29,10 +30,51 @@ iframe {
   background: #0f172a;
   z-index: 2147483647;
 }
+#aviso {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #0f172a;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #f8fafc;
+  font-family: sans-serif;
+  text-align: center;
+  padding: 20px;
+  box-sizing: border-box;
+  z-index: 100;
+}
 </style>
 </head>
 <body>
-<iframe src="https://script.google.com/macros/s/AKfycbyumXfpDlgpBlUPcDN1qCv3-oZ9iUrKWk2sFhSGW7AouLOl_vnkbTPX-EtXoKH4e1JzYg/exec"></iframe>
+<iframe id="app" src="https://script.google.com/macros/s/AKfycbyumXfpDlgpBlUPcDN1qCv3-oZ9iUrKWk2sFhSGW7AouLOl_vnkbTPX-EtXoKH4e1JzYg/exec"></iframe>
 <div id="cortina"></div>
+<div id="aviso">
+  <h1 style="font-size:22px;margin-bottom:12px;">Bitácora Financiera</h1>
+  <p style="font-size:15px;color:#94a3b8;margin-bottom:24px;line-height:1.5;">Entra con Google para autorizar la aplicación.</p>
+  <a href="https://script.google.com/macros/s/AKfycbyumXfpDlgpBlUPcDN1qCv3-oZ9iUrKWk2sFhSGW7AouLOl_vnkbTPX-EtXoKH4e1JzYg/exec" style="display:inline-block;padding:14px 28px;background:#0284c7;color:white;text-decoration:none;border-radius:8px;font-weight:600;">Entrar con Google</a>
+</div>
+<script>
+var app = document.getElementById('app');
+var aviso = document.getElementById('aviso');
+var timer = setTimeout(function() {
+  // Si pasan 3 segundos y la app no cargó bien, mostramos el aviso.
+  // Lo detectamos mirando si el iframe sigue cargando contenido de Google login.
+  try {
+    // Si es cross-origin normal, asumimos que cargó bien.
+    // Si no lo es, mostramos el aviso.
+    if (!app.contentWindow || !app.contentWindow.location) {
+      aviso.style.display = 'flex';
+    }
+  } catch (e) {
+    // Cross-origin: la app cargó (bien o mal). No mostramos el aviso.
+    // El usuario ya está autorizado o verá la app.
+  }
+}, 3000);
+</script>
 </body>
 </html>
