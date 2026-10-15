@@ -31,7 +31,6 @@ html, body {
   background: #0f172a;
   z-index: 2147483647;
   display: none;
-  pointer-events: none;
 }
 #cargando {
   position: fixed;
@@ -69,9 +68,7 @@ html, body {
   text-decoration: none;
   font-weight: 600;
 }
-#cargando a:hover {
-  text-decoration: underline;
-}
+#cargando a:hover { text-decoration: underline; }
 .loader {
   border: 4px solid #334155;
   border-top: 4px solid #0284c7;
@@ -91,8 +88,8 @@ html, body {
 
 <div id="cargando">
   <div class="loader"></div>
-  <h2>Redirigiendo a tu Bitácora Financiera…</h2>
-  <p>Si no eres redirigido automáticamente en unos segundos,<br>
+  <h2>Cargando tu Bitácora Financiera…</h2>
+  <p>Si no carga en unos segundos,<br>
      <a href="#" id="enlaceManual">haz clic aquí para ingresar</a>.</p>
 </div>
 
@@ -102,46 +99,23 @@ html, body {
 <script>
 (function() {
   var APP_URL = 'https://script.google.com/macros/s/AKfycbyumXfpDlgpBlUPcDN1qCv3-oZ9iUrKWk2sFhSGW7AouLOl_vnkbTPX-EtXoKH4e1JzYg/exec';
-  var appFrame    = document.getElementById('app');
-  var cortina     = document.getElementById('cortina');
-  var cargando    = document.getElementById('cargando');
-  var enlaceManual= document.getElementById('enlaceManual');
-  var decidido    = false;
+  var appFrame     = document.getElementById('app');
+  var cortina      = document.getElementById('cortina');
+  var cargando     = document.getElementById('cargando');
+  var enlaceManual = document.getElementById('enlaceManual');
 
+  // Único camino de escape manual: clic del usuario.
   enlaceManual.href = APP_URL;
   enlaceManual.addEventListener('click', function(ev) {
     ev.preventDefault();
-    decidido = true;
     window.location.href = APP_URL;
   });
 
-  // --- De "Quita baner": mostrar la app dentro del iframe y tapar el baner ---
-  function mostrarApp() {
-    if (decidido) return;
-    decidido = true;
-    cargando.style.display = 'none';
-    appFrame.src = APP_URL;
-    appFrame.style.display = 'block';
-    cortina.style.display = 'block';
-  }
-
-  // --- De "Quita error 401": salir con navegación real, no con iframe ---
-  function redirigir() {
-    if (decidido) return;
-    decidido = true;
-    window.location.replace(APP_URL);
-  }
-
-  // Pre-chequeo con <script>: si carga => usuario autorizado => iframe (sin baner).
-  // Si falla => redirección directa (sin 401 dentro del iframe).
-  var s = document.createElement('script');
-  s.src = APP_URL + '?_t=' + Date.now();
-  s.onload = mostrarApp;
-  s.onerror = redirigir;
-  document.body.appendChild(s);
-
-  // Red de seguridad: si en 5s no hay veredicto, redirigimos limpio.
-  setTimeout(redirigir, 5000);
+  // Camino automático: SIEMPRE iframe. Nunca redirección.
+  cargando.style.display = 'none';
+  appFrame.src = APP_URL;
+  appFrame.style.display = 'block';
+  cortina.style.display = 'block';
 })();
 </script>
 </body>
