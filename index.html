@@ -3,29 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Mi App</title>
+  <title>Bitácora Financiera</title>
   <style>
-    :root { --crop: 60px; }              /* alto de la franja del banner que se oculta */
-    html, body { margin: 0; height: 100%; overflow: hidden; background: #fff; }
+    :root { --crop: 60px; }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #0f172a; }
     #wrap { position: fixed; inset: 0; overflow: hidden; }
     #app {
-      position: absolute;
-      top: calc(var(--crop) * -1);
-      left: 0;
-      width: 100%;
-      height: calc(100% + var(--crop));
-      border: 0;
+  position: absolute;
+  top: calc(-1 * var(--crop));
+  left: 0;
+  width: 100%;
+  height: calc(100% + var(--crop));
+  border: 0;
+  display: none;
+}   
+    #cargando {
+      position: fixed; inset: 0;
+      display: flex; justify-content: center; align-items: center;
+      background: #0f172a; color: #94a3b8;
+      font-family: Arial, sans-serif; font-size: 15px;
     }
     @media (max-width: 600px) { :root { --crop: 80px; } }
   </style>
 </head>
 <body>
   <div id="wrap">
-    <iframe id="app" title="Mi App" allow="clipboard-write; fullscreen"></iframe>
+    <iframe id="app" title="Bitácora Financiera" allow="clipboard-write; fullscreen"></iframe>
+    <iframe id="detector" style="display:none;"></iframe>
+    <div id="cargando">Verificando acceso…</div>
   </div>
 
   <script>
-    // 👉 PEGA AQUÍ TU URL REAL (https://script.google.com/macros/s/.../exec)
     var APP_URL = "https://script.google.com/macros/s/AKfycbyKi-k-89v1osCeg1F7l2iPGMpt6gDyczV2ba5okcbNGODBNnr5lZhSp1XXdkQ2O-wvUQ/exec";
 
     // Calibración: tusitio.github.io/repo/?crop=90
@@ -34,19 +42,38 @@
       document.documentElement.style.setProperty("--crop", crop + "px");
     }
 
-    var frame = document.getElementById("app");
+    var app = document.getElementById("app");
+    var detector = document.getElementById("detector");
+    var cargando = document.getElementById("cargando");
+    var decidido = false;
 
-    // Si la app no cargó dentro del iframe (sesión de Google no válida, cookies
-    // bloqueadas, etc.), se abre en la MISMA pestaña, sin ventanas nuevas.
-    frame.onload = function () {
+    detector.onload = function() {
+      if (decidido) return;
+      decidido = true;
       try {
-        if (frame.contentWindow.length === 0) {
+        if (detector.contentWindow.length > 0) {
+          // Autenticado: mostrar la app (banner tapado por --crop)
+          cargando.style.display = "none";
+          app.src = APP_URL;
+          app.style.display = "block";
+        } else {
+          // No autenticado: redirigir la página completa
           window.location.replace(APP_URL);
         }
-      } catch (e) { /* no se puede inspeccionar: se deja como está */ }
+      } catch (e) {
+        window.location.replace(APP_URL);
+      }
     };
 
-    frame.src = APP_URL;
+    // Timeout de seguridad: 4 segundos.
+    setTimeout(function() {
+      if (!decidido) {
+        decidido = true;
+        window.location.replace(APP_URL);
+      }
+    }, 4000);
+
+    detector.src = APP_URL;
   </script>
 </body>
 </html>
