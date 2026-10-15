@@ -1,53 +1,148 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirigiendo a Bitácora Financiera...</title>
-    
-    <!-- Redirección automática a nivel de HTML -->
-    <meta http-equiv="refresh" content="0; url=https://script.google.com/macros/s/AKfycbyumXfpDlgpBlUPcDN1qCv3-oZ9iUrKWk2sFhSGW7AouLOl_vnkbTPX-EtXoKH4e1JzYg/exec">
-    
-    <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #0f172a; /* Mismo fondo de tu login */
-            color: #f8fafc;
-            text-align: center;
-        }
-        .loader {
-            border: 4px solid #334155;
-            border-top: 4px solid #0284c7;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        a { color: #38bdf8; text-decoration: none; font-weight: 600; }
-        a:hover { text-decoration: underline; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bitácora Financiera</title>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #0f172a;
+}
+#app {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  z-index: 10;
+  display: none;
+}
+#cortina {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  background: #0f172a;
+  z-index: 2147483647;
+  display: none;
+  pointer-events: none;
+}
+#cargando {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #0f172a;
+  color: #94a3b8;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  text-align: center;
+  z-index: 20;
+  padding: 24px;
+  box-sizing: border-box;
+}
+#cargando h2 {
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+#cargando p {
+  color: #94a3b8;
+  font-size: 14px;
+  margin: 8px 0 0;
+  line-height: 1.5;
+}
+#cargando a {
+  color: #38bdf8;
+  text-decoration: none;
+  font-weight: 600;
+}
+#cargando a:hover {
+  text-decoration: underline;
+}
+.loader {
+  border: 4px solid #334155;
+  border-top: 4px solid #0284c7;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
 </head>
 <body>
-    <div>
-        <div class="loader"></div>
-        <h2>Redirigiendo a tu Bitácora Financiera...</h2>
-        <p style="color: #94a3b8; font-size: 14px;">Si no eres redirigido automáticamente en unos segundos, <br>
-        <a href="https://script.google.com/macros/s/AKfycbyumXfpDlgpBlUPcDN1qCv3-oZ9iUrKWk2sFhSGW7AouLOl_vnkbTPX-EtXoKH4e1JzYg/exec">haz clic aquí para ingresar</a>.</p>
-    </div>
 
-    <script>
-        // Redirección inmediata por JavaScript (más rápido que el meta refresh)
-        window.location.replace("https://script.google.com/macros/s/AKfycbyumXfpDlgpBlUPcDN1qCv3-oZ9iUrKWk2sFhSGW7AouLOl_vnkbTPX-EtXoKH4e1JzYg/exec");
-    </script>
+<div id="cargando">
+  <div class="loader"></div>
+  <h2>Redirigiendo a tu Bitácora Financiera…</h2>
+  <p>Si no eres redirigido automáticamente en unos segundos,<br>
+     <a href="#" id="enlaceManual">haz clic aquí para ingresar</a>.</p>
+</div>
+
+<iframe id="app" src="about:blank"></iframe>
+<div id="cortina"></div>
+
+<script>
+(function() {
+  var APP_URL = 'https://script.google.com/macros/s/AKfycbyumXfpDlgpBlUPcDN1qCv3-oZ9iUrKWk2sFhSGW7AouLOl_vnkbTPX-EtXoKH4e1JzYg/exec';
+  var appFrame    = document.getElementById('app');
+  var cortina     = document.getElementById('cortina');
+  var cargando    = document.getElementById('cargando');
+  var enlaceManual= document.getElementById('enlaceManual');
+  var decidido    = false;
+
+  enlaceManual.href = APP_URL;
+  enlaceManual.addEventListener('click', function(ev) {
+    ev.preventDefault();
+    decidido = true;
+    window.location.href = APP_URL;
+  });
+
+  // --- De "Quita baner": mostrar la app dentro del iframe y tapar el baner ---
+  function mostrarApp() {
+    if (decidido) return;
+    decidido = true;
+    cargando.style.display = 'none';
+    appFrame.src = APP_URL;
+    appFrame.style.display = 'block';
+    cortina.style.display = 'block';
+  }
+
+  // --- De "Quita error 401": salir con navegación real, no con iframe ---
+  function redirigir() {
+    if (decidido) return;
+    decidido = true;
+    window.location.replace(APP_URL);
+  }
+
+  // Pre-chequeo con <script>: si carga => usuario autorizado => iframe (sin baner).
+  // Si falla => redirección directa (sin 401 dentro del iframe).
+  var s = document.createElement('script');
+  s.src = APP_URL + '?_t=' + Date.now();
+  s.onload = mostrarApp;
+  s.onerror = redirigir;
+  document.body.appendChild(s);
+
+  // Red de seguridad: si en 5s no hay veredicto, redirigimos limpio.
+  setTimeout(redirigir, 5000);
+})();
+</script>
 </body>
 </html>
