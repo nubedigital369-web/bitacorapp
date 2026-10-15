@@ -6,45 +6,47 @@
     <title>Bitácora Financiera</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0f172a; }
-        iframe { width: 100%; height: 100%; border: none; display: none; }
-        .cargando {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
-            background: #0f172a; color: #94a3b8;
-            font-family: Arial, sans-serif; font-size: 15px;
-        }
-        .tapa-banner {
-            position: fixed; top: 0; left: 0; width: 100%; height: 60px;
-            background: #0f172a; z-index: 999999; pointer-events: none; display: none;
-        }
+        #app-frame { width: 100%; height: calc(100% + 60px); margin-top: -60px; border: none; display: none; }
+        .cargando { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #0f172a; color: #94a3b8; font-family: Arial, sans-serif; font-size: 15px; }
     </style>
 </head>
 <body>
     <div class="cargando" id="cargando">Cargando Bitácora Financiera…</div>
-    <iframe id="app-frame" src="https://script.google.com/macros/s/AKfycbxXnoAlyIGQn7k7Buik1cIidwr9i5g_CWnVCl6LqOa4jn3eHPvagw4kjkCb1OamRualNw/exec"></iframe>
-    <div class="tapa-banner" id="tapa"></div>
+    <iframe id="app-frame" src="about:blank"></iframe>
+    <iframe id="detector-frame" src="about:blank" style="display:none;"></iframe>
     <script>
     (function() {
         var APP_URL = 'https://script.google.com/macros/s/AKfycbxXnoAlyIGQn7k7Buik1cIidwr9i5g_CWnVCl6LqOa4jn3eHPvagw4kjkCb1OamRualNw/exec';
         var frame = document.getElementById('app-frame');
+        var detector = document.getElementById('detector-frame');
         var cargando = document.getElementById('cargando');
-        var tapa = document.getElementById('tapa');
-        var recibido = false;
-
-        window.addEventListener('message', function(e) {
-            if (e.data === 'bitacora-ready') {
-                recibido = true;
-                cargando.style.display = 'none';
-                frame.style.display = 'block';
-                tapa.style.display = 'block';
-            }
-        });
-
-        setTimeout(function() {
-            if (!recibido) {
+        
+        detector.onload = function() {
+            try {
+                if (detector.contentWindow.length > 0) {
+                    // AUTENTICADO: cargar app en iframe visible con banner tapado
+                    frame.src = APP_URL;
+                    frame.style.display = 'block';
+                    cargando.style.display = 'none';
+                } else {
+                    // NO AUTENTICADO: redirigir página completa
+                    window.location.href = APP_URL;
+                }
+            } catch (e) {
+                // Error de cross-origin: redirigir por seguridad
                 window.location.href = APP_URL;
             }
-        }, 3000);
+        };
+        
+        // Timeout de seguridad: si en 4 segundos no hay respuesta, redirigir.
+        setTimeout(function() {
+            if (frame.style.display === 'none') {
+                window.location.href = APP_URL;
+            }
+        }, 4000);
+        
+        // Lanzar la detección cargando el iframe oculto
+        detector.src = APP_URL;
     })();
     </script>
 </body>
