@@ -1,25 +1,114 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bitácora Financiera</title>
-    <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0f172a; }
-        iframe { width: 100%; height: 100%; border: none; display: block; }
-        #tapa {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 120px;
-            background: #0f172a;
-            z-index: 999999;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Bitácora Financiera</title>
+  <style>
+    :root { --crop: 60px; }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #0f172a; }
+    #wrap { position: fixed; inset: 0; overflow: hidden; }
+    #app {
+      position: absolute;
+      top: calc(var(--crop) * -1);
+      left: 0;
+      width: 100%;
+      height: calc(100% + var(--crop));
+      border: 0;
+      display: none; /* Oculto hasta que se confirme la autenticación */
+    }
+    #auth-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0f172a;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    #auth-overlay h2 { margin-bottom: 10px; }
+    #auth-overlay p { margin-bottom: 20px; color: #94a3b8; }
+    .btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    @media (max-width: 600px) { :root { --crop: 80px; } }
+  </style>
 </head>
 <body>
-    <iframe src="https://script.google.com/macros/s/AKfycbyKi-k-89v1osCeg1F7l2iPGMpt6gDyczV2ba5okcbNGODBNnr5lZhSp1XXdkQ2O-wvUQ/exec"></iframe>
-    <div id="tapa"></div>
+  <div id="wrap">
+    <iframe id="app" title="Bitácora Financiera" allow="clipboard-write; fullscreen"></iframe>
+    <div id="auth-overlay">
+      <h2>Autenticación Requerida</h2>
+      <p>Para acceder a la Bitácora Financiera, es necesario iniciar sesión con tu cuenta de Google.</p>
+      <button id="auth-button" class="btn">Iniciar Sesión / Autorizar</button>
+    </div>
+  </div>
+
+  <script>
+    var APP_URL = "https://script.google.com/macros/s/AKfycbxrOT4slk2XEp4ykcgTU8l9mXicGpnVWgHtf_EXzCdCKyvhrzdCP1H1D2q6X9u9jHqxzw/exec";
+
+    // Calibración del recorte del banner: tusitio.github.io/repo/?crop=90
+    var crop = new URLSearchParams(location.search).get("crop");
+    if (crop && /^\d+$/.test(crop)) {
+      document.documentElement.style.setProperty("--crop", crop + "px");
+    }
+
+    var appFrame = document.getElementById("app");
+    var authOverlay = document.getElementById("auth-overlay");
+    var authButton = document.getElementById("auth-button");
+
+    // Función que se ejecuta si el usuario SÍ está autenticado.
+    window.authSuccess = function(email) {
+      if (!email) {
+        // Si no hay correo, la autenticación falló.
+        return; 
+      }
+      // Autenticado: ocultar el overlay y mostrar el iframe con la app.
+      authOverlay.style.display = "none";
+      appFrame.src = APP_URL;
+      appFrame.style.display = "block";
+    };
+
+    // Función que se ejecuta si el usuario NO está autenticado.
+    // Redirige la página completa a la app para que Google pida permisos.
+    function redirigirAAutenticacion() {
+      window.location.href = APP_URL;
+    }
+
+    // Si el usuario hace clic en el botón de autorizar, lo redirigimos.
+    authButton.addEventListener("click", function() {
+      redirigirAAutenticacion();
+    });
+
+    // Cargamos el script de verificación (JSONP) de forma oculta.
+    // Si el usuario ya está autenticado, se llamará a authSuccess.
+    // Si no, el script fallará y redirigiremos a la página de autorización.
+    var jsonpScript = document.createElement("script");
+    jsonpScript.src = APP_URL + "?jsonpCallback=authSuccess";
+    jsonpScript.onerror = redirigirAAutenticacion;
+    document.body.appendChild(jsonpScript);
+
+    // Timeout de seguridad: si en 5 segundos no hay respuesta, redirigimos.
+    setTimeout(function() {
+      if (appFrame.style.display === "none") {
+        redirigirAAutenticacion();
+      }
+    }, 5000);
+  </script>
 </body>
 </html>
