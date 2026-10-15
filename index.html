@@ -1,41 +1,62 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Mi App</title>
-  <style>
-    :root { --crop: 60px; }              /* alto de la franja del banner que se oculta */
-    html, body { margin: 0; height: 100%; overflow: hidden; background: #fff; }
-    #wrap { position: fixed; inset: 0; overflow: hidden; }
-    #app {
-      position: absolute;
-      top: calc(var(--crop) * -1);
-      left: 0;
-      width: 100%;
-      height: calc(100% + var(--crop));
-      border: 0;
-    }
-    /* En pantallas angostas el banner suele ocupar más líneas */
-    @media (max-width: 600px) { :root { --crop: 80px; } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bitácora Financiera</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0f172a; }
+        #app-frame { width: 100%; height: calc(100% + 60px); margin-top: -60px; border: none; display: none; }
+        #cargando {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            background: #0f172a; color: #94a3b8;
+            font-family: Arial, sans-serif; font-size: 15px;
+            text-align: center; padding: 20px; box-sizing: border-box;
+        }
+    </style>
 </head>
 <body>
-  <div id="wrap">
-    <iframe id="app" title="Mi App" allow="clipboard-write; fullscreen"></iframe>
-  </div>
+    <div id="cargando">Verificando acceso…</div>
+    <iframe id="app-frame" src="about:blank"></iframe>
 
-  <script>
-    // 👉 URL de tu implementación (termina en /exec)
-    const APP_URL = "https://script.google.com/macros/s/AKfycbxXnoAlyIGQn7k7Buik1cIidwr9i5g_CWnVCl6LqOa4jn3eHPvagw4kjkCb1OamRualNw/exec";
+    <script>
+    (function() {
+        var APP_URL = 'https://script.google.com/macros/s/AKfycbxhbH4YKyOBTXEBlWe6GqwZdGC7UWyapNuiAeVjlCNHoFv8fFbMKs8ZmMS25uiDjpc5rQ/exec';
+        var frame = document.getElementById('app-frame');
+        var cargando = document.getElementById('cargando');
 
-    // Modo calibración: abre  tusitio.github.io/repo/?crop=75  para probar otros valores sin editar el archivo
-    const crop = new URLSearchParams(location.search).get("crop");
-    if (crop && /^\d+$/.test(crop)) {
-      document.documentElement.style.setProperty("--crop", crop + "px");
-    }
+        // Función que se ejecuta si el usuario SÍ está autorizado.
+        window.authSuccess = function(email) {
+            if (!email) {
+                // No hay correo: no autorizado.
+                window.location.href = APP_URL;
+                return;
+            }
+            // Autorizado: mostrar el iframe con la app (banner tapado).
+            cargando.style.display = 'none';
+            frame.src = APP_URL;
+            frame.style.display = 'block';
+        };
 
-    document.getElementById("app").src = APP_URL;
-  </script>
+        // Función que se ejecuta si el JSONP falla.
+        window.authFailure = function() {
+            window.location.href = APP_URL;
+        };
+
+        // Cargar el JSONP.
+        var script = document.createElement('script');
+        script.src = APP_URL + '?jsonpCallback=authSuccess';
+        script.onerror = window.authFailure;
+        document.body.appendChild(script);
+
+        // Timeout de seguridad.
+        setTimeout(function() {
+            if (frame.style.display === 'none' && cargando.style.display !== 'none') {
+                window.location.href = APP_URL;
+            }
+        }, 5000);
+    })();
+    </script>
 </body>
 </html>
