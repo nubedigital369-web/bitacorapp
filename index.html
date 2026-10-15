@@ -6,56 +6,49 @@
     <title>Bitácora Financiera</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0f172a; }
-        #app-frame { width: 100%; height: calc(100% + 500px); margin-top: -500px; border: none; display: none; }
-        #cargando {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
-            background: #0f172a; color: #94a3b8;
-            font-family: Arial, sans-serif; font-size: 15px;
-            text-align: center; padding: 20px; box-sizing: border-box;
-        }
+        #app-frame { width: 100%; height: calc(100% + 120px); margin-top: -120px; border: none; display: none; }
+        #detector-frame { display: none; }
+        #cargando { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; background: #0f172a; color: #94a3b8; font-family: Arial, sans-serif; font-size: 15px; }
     </style>
 </head>
 <body>
-    <div id="cargando">Verificando acceso…</div>
+    <div id="cargando">Cargando…</div>
     <iframe id="app-frame" src="about:blank"></iframe>
+    <iframe id="detector-frame" src="about:blank"></iframe>
 
     <script>
     (function() {
-        var APP_URL = 'https://script.google.com/macros/s/AKfycbxhbH4YKyOBTXEBlWe6GqwZdGC7UWyapNuiAeVjlCNHoFv8fFbMKs8ZmMS25uiDjpc5rQ/exec';
+        var APP_URL = 'https://script.google.com/macros/s/AKfycbyKi-k-89v1osCeg1F7l2iPGMpt6gDyczV2ba5okcbNGODBNnr5lZhSp1XXdkQ2O-wvUQ/exec';
         var frame = document.getElementById('app-frame');
+        var detector = document.getElementById('detector-frame');
         var cargando = document.getElementById('cargando');
 
-        // Función que se ejecuta si el usuario SÍ está autorizado.
-        window.authSuccess = function(email) {
-            if (!email) {
-                // No hay correo: no autorizado.
+        detector.onload = function() {
+            try {
+                // Si el detector cargó la app (autenticado), contentWindow.length > 0.
+                // Si cargó la página de login de Google, contentWindow.length === 0.
+                if (detector.contentWindow.length > 0) {
+                    cargando.style.display = 'none';
+                    frame.src = APP_URL;
+                    frame.style.display = 'block';
+                } else {
+                    window.location.href = APP_URL;
+                }
+            } catch (e) {
+                // Error de cross-origin: redirigir por seguridad.
                 window.location.href = APP_URL;
-                return;
             }
-            // Autorizado: mostrar el iframe con la app (banner tapado).
-            cargando.style.display = 'none';
-            frame.src = APP_URL;
-            frame.style.display = 'block';
         };
 
-        // Función que se ejecuta si el JSONP falla.
-        window.authFailure = function() {
-            window.location.href = APP_URL;
-        };
-
-        // Cargar el JSONP.
-        var script = document.createElement('script');
-        script.src = APP_URL + '?jsonpCallback=authSuccess';
-        script.onerror = window.authFailure;
-        document.body.appendChild(script);
-
-        // Timeout de seguridad.
+        // Timeout: si en 4 segundos no se ha determinado, redirigir.
         setTimeout(function() {
-            if (frame.style.display === 'none' && cargando.style.display !== 'none') {
+            if (frame.style.display === 'none') {
                 window.location.href = APP_URL;
             }
-        }, 5000);
+        }, 4000);
+
+        // Lanzar la detección.
+        detector.src = APP_URL;
     })();
     </script>
 </body>
