@@ -1,21 +1,52 @@
-<iframe id="app-frame" src="about:blank"></iframe>
-<iframe id="detector-frame" src="https://script.google.com/macros/s/AKfycbyKi-k-89v1osCeg1F7l2iPGMpt6gDyczV2ba5okcbNGODBNnr5lZhSp1XXdkQ2O-wvUQ/exec" style="display:none;"></iframe>
-<script>
-(function() {
-    var APP_URL = 'https://script.google.com/macros/s/AKfycbyKi-k-89v1osCeg1F7l2iPGMpt6gDyczV2ba5okcbNGODBNnr5lZhSp1XXdkQ2O-wvUQ/exec';
-    var frame = document.getElementById('app-frame');
-    var detector = document.getElementById('detector-frame');
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mi App</title>
+  <style>
+    :root { --crop: 60px; }              /* alto de la franja del banner que se oculta */
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #fff; }
+    #wrap { position: fixed; inset: 0; overflow: hidden; }
+    #app {
+      position: absolute;
+      top: calc(var(--crop) * -1);
+      left: 0;
+      width: 100%;
+      height: calc(100% + var(--crop));
+      border: 0;
+    }
+    @media (max-width: 600px) { :root { --crop: 80px; } }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <iframe id="app" title="Mi App" allow="clipboard-write; fullscreen"></iframe>
+  </div>
 
-    detector.onload = function() {
-        try {
-            if (detector.contentWindow.length > 0) {
-                frame.src = APP_URL;
-            } else {
-                window.location.href = APP_URL;
-            }
-        } catch (e) {
-            window.location.href = APP_URL;
+  <script>
+    // 👉 PEGA AQUÍ TU URL REAL (https://script.google.com/macros/s/.../exec)
+    var APP_URL = "https://script.google.com/macros/s/AKfycbyKi-k-89v1osCeg1F7l2iPGMpt6gDyczV2ba5okcbNGODBNnr5lZhSp1XXdkQ2O-wvUQ/exec";
+
+    // Calibración: tusitio.github.io/repo/?crop=90
+    var crop = new URLSearchParams(location.search).get("crop");
+    if (crop && /^\d+$/.test(crop)) {
+      document.documentElement.style.setProperty("--crop", crop + "px");
+    }
+
+    var frame = document.getElementById("app");
+
+    // Si la app no cargó dentro del iframe (sesión de Google no válida, cookies
+    // bloqueadas, etc.), se abre en la MISMA pestaña, sin ventanas nuevas.
+    frame.onload = function () {
+      try {
+        if (frame.contentWindow.length === 0) {
+          window.location.replace(APP_URL);
         }
+      } catch (e) { /* no se puede inspeccionar: se deja como está */ }
     };
-})();
-</script>
+
+    frame.src = APP_URL;
+  </script>
+</body>
+</html>
