@@ -6,38 +6,59 @@
 <title>Bitácora Financiera</title>
 <style>
 html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#0f172a; }
-#app { position:fixed; top:0; left:0; width:100%; height:100%; border:0; z-index:10; }
-#cortina {
-  position:fixed; top:0; left:0; width:100%; height:70px;
-  background:#0f172a; z-index:2147483647; pointer-events:none;
-}
+#app { position:fixed; top:0; left:0; width:100%; height:100%; border:0; z-index:10; display:none; }
+#cortina { position:fixed; top:0; left:0; width:100%; height:70px; background:#0f172a; z-index:2147483647; pointer-events:none; display:none; }
 @media (max-width: 600px) { #cortina { height: 90px; } }
+#overlay {
+  position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center;
+  background:#0f172a; color:#f8fafc; font-family:sans-serif; z-index:20; text-align:center; padding:24px; box-sizing:border-box;
+}
+#overlay h2 { font-size:20px; margin:0 0 12px; }
+#overlay p { color:#94a3b8; font-size:14px; margin:0 0 24px; max-width:300px; line-height:1.5; }
+#btnEntrar { padding:14px 32px; border-radius:10px; border:none; background:#0284c7; color:#fff; font-size:16px; font-weight:600; cursor:pointer; }
 </style>
 </head>
 <body>
-<iframe id="app" src="https://script.google.com/macros/s/AKfycbzxEalV4dhRmowsOK2_YOay1P6Lc-a9H0Dm_d9kmaQfdWkn7Bn553rSZ3XaZw6LMJnvbQ/exec"></iframe>
+
+<div id="overlay">
+  <h2>Bitácora Financiera</h2>
+  <p>Para entrar, asegúrate de tener tu cuenta de Google abierta en el navegador.</p>
+  <button id="btnEntrar">Entrar</button>
+</div>
+
+<iframe id="app" src="about:blank"></iframe>
 <div id="cortina"></div>
 
 <script>
 (function() {
-  var iframe = document.getElementById('app');
-  var urlApp = iframe.src;
-  var cargada = false;
+  var APP_URL = 'https://script.google.com/macros/s/AKfycbzxEalV4dhRmowsOK2_YOay1P6Lc-a9H0Dm_d9kmaQfdWkn7Bn553rSZ3XaZw6LMJnvbQ/exec';
+  var app = document.getElementById('app');
+  var cortina = document.getElementById('cortina');
+  var overlay = document.getElementById('overlay');
+  var btn = document.getElementById('btnEntrar');
+  var autenticado = false;
 
-  // Escuchamos si el Index de Apps Script avisa que cargó bien
-  window.addEventListener('message', function(e) {
-    if (e.data === 'bitacora-ready') {
-      cargada = true;
-    }
+  // Esta función la llama el JSONP si el usuario ya tiene sesión.
+  window.authSuccess = function() {
+    if (autenticado) return;
+    autenticado = true;
+    overlay.style.display = 'none';
+    app.src = APP_URL;
+    app.style.display = 'block';
+    cortina.style.display = 'block';
+  };
+
+  // Cargamos el JSONP. Si responde, el usuario está autenticado.
+  var s = document.createElement('script');
+  s.src = APP_URL + '?callback=authSuccess&_t=' + Date.now();
+  document.body.appendChild(s);
+
+  // Si el JSONP falla o tarda, el usuario pulsa "Entrar" y se autentica fuera del iframe.
+  btn.addEventListener('click', function() {
+    btn.disabled = true;
+    btn.innerText = 'Abriendo…';
+    window.open(APP_URL, '_blank');
   });
-
-  // Red de seguridad: si en 4 segundos el iframe no avisa, es que se bloqueó.
-  // Abrimos la app directo en la ventana para que funcione perfecto.
-  setTimeout(function() {
-    if (!cargada) {
-      window.location.href = urlApp;
-    }
-  }, 4000);
 })();
 </script>
 </body>
