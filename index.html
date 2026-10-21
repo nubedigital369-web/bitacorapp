@@ -15,7 +15,24 @@ html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#0f17
 </style>
 </head>
 <body>
-<iframe id="app" src="https://script.google.com/macros/library/d/1X3Zf3M_HYYgIR6MUvTFnNiflMDv0hB6xs8kljUygwE86OOTpOWvJ3cs9/105"></iframe>
+<iframe id="app" src="about:blank"></iframe>
 <div id="cortina"></div>
+
+<script>
+// Pega aquí la MISMA URL que ya tenías (la de /exec, no la de /library/)
+const APP_URL = "https://script.google.com/macros/s/AKfycbzxEalV4dhRmowsOK2_YOay1P6Lc-a9H0Dm_d9kmaQfdWkn7Bn553rSZ3XaZw6LMJnvbQ/exec";
+
+// Detectar iPhone/iPad
+const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+              (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+if (esIOS) {
+  // En iPhone, cargar directo en la misma ventana para evitar el 401
+  window.location.replace(APP_URL);
+} else {
+  // En PC y Android, cargar en el iframe y tapar el banner con la cortina
+  document.getElementById("app").src = APP_URL;
+}
+</script>
 </body>
 </html>
