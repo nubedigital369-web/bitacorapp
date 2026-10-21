@@ -6,64 +6,31 @@
 <title>Bitácora Financiera</title>
 <style>
 html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#0f172a; }
-#app { position:fixed; top:0; left:0; width:100%; height:100%; border:0; z-index:10; display:none; }
-#cortina { position:fixed; top:0; left:0; width:100%; height:30px; background:#0f172a; z-index:2147483647; pointer-events:none; display:none; }
-@media (max-width: 600px) { #cortina { height: 50px; } }
-#overlay {
-  position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center;
-  background:#0f172a; color:#f8fafc; font-family:sans-serif; z-index:20; text-align:center; padding:24px; box-sizing:border-box;
+#app { position:fixed; top:0; left:0; width:100%; height:100%; border:0; z-index:10; }
+#cortina {
+  position:fixed; top:0; left:0; width:100%; height:30px;
+  background:#0f172a; z-index:2147483647; pointer-events:none;
 }
-#overlay h2 { font-size:20px; margin:0 0 12px; }
-#overlay p { color:#94a3b8; font-size:14px; margin:0 0 24px; max-width:320px; line-height:1.5; }
-#btnEntrar { padding:14px 32px; border-radius:10px; border:none; background:#0284c7; color:#fff; font-size:16px; font-weight:600; cursor:pointer; }
+@media (max-width: 600px) { #cortina { height: 50px; } }
 </style>
 </head>
 <body>
-
-<div id="overlay">
-  <h2>Bitácora Financiera</h2>
-  <p>Para entrar, toca el botón. Tu navegador pedirá permiso para acceder a tu cuenta de Google.</p>
-  <button id="btnEntrar">Entrar</button>
-</div>
-
-<iframe id="app" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms allow-storage-access-by-user-activation"></iframe>
+<iframe id="app"></iframe>
 <div id="cortina"></div>
 
 <script>
-(function() {
-  var APP_URL = 'https://script.google.com/macros/library/d/1X3Zf3M_HYYgIR6MUvTFnNiflMDv0hB6xs8kljUygwE86OOTpOWvJ3cs9/105';
-  var app = document.getElementById('app');
-  var cortina = document.getElementById('cortina');
-  var overlay = document.getElementById('overlay');
-  var btn = document.getElementById('btnEntrar');
+const URL_APP = "https://script.google.com/macros/library/d/1X3Zf3M_HYYgIR6MUvTFnNiflMDv0hB6xs8kljUygwE86OOTpOWvJ3cs9/105";
 
-  btn.addEventListener('click', function() {
-    btn.disabled = true;
-    btn.innerText = 'Cargando…';
+// iPhone, iPad (incluye iPadOS que se presenta como Mac con pantalla táctil)
+const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+              (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
-    // Solicitar permiso de cookies de terceros para script.google.com.
-    // Requiere un clic del usuario (esto lo da el botón).
-    if (document.requestStorageAccessFor) {
-      document.requestStorageAccessFor('https://script.google.com')
-        .then(cargarApp)
-        .catch(cargarApp);
-    } else if (document.requestStorageAccess) {
-      // Fallback: pedir permiso para el dominio propio
-      document.requestStorageAccess()
-        .then(cargarApp)
-        .catch(cargarApp);
-    } else {
-      cargarApp();
-    }
-  });
-
-  function cargarApp() {
-    overlay.style.display = 'none';
-    app.src = APP_URL;
-    app.style.display = 'block';
-    cortina.style.display = 'block';
-  }
-})();
+if (esIOS) {
+  // Safari bloquea cookies de terceros en iframes: abrir en la misma pestaña
+  window.location.replace(URL_APP);
+} else {
+  document.getElementById("app").src = URL_APP;
+}
 </script>
 </body>
 </html>
