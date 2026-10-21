@@ -6,16 +6,71 @@
 <title>Bitácora Financiera</title>
 <style>
 html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#0f172a; }
-#app { position:fixed; top:0; left:0; width:100%; height:100%; border:0; z-index:10; }
+#app { position:fixed; top:0; left:0; width:100%; height:100%; border:0; z-index:10; display:none; }
 #cortina {
   position:fixed; top:0; left:0; width:100%; height:30px;
-  background:#0f172a; z-index:2147483647; pointer-events:none;
+  background:#0f172a; z-index:2147483647; pointer-events:none; display:none;
 }
 @media (max-width: 600px) { #cortina { height: 50px; } }
+#overlay {
+  position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center;
+  background:#0f172a; color:#f8fafc; font-family:sans-serif; z-index:20; text-align:center; padding:24px; box-sizing:border-box;
+}
+#overlay h2 { font-size:20px; margin:0 0 12px; }
+#overlay p { color:#94a3b8; font-size:14px; margin:0 0 24px; max-width:320px; line-height:1.5; }
+#btnEntrar { padding:14px 32px; border-radius:10px; border:none; background:#0284c7; color:#fff; font-size:16px; font-weight:600; cursor:pointer; }
 </style>
 </head>
 <body>
-<iframe id="app" src="https://script.google.com/macros/s/AKfycbzxEalV4dhRmowsOK2_YOay1P6Lc-a9H0Dm_d9kmaQfdWkn7Bn553rSZ3XaZw6LMJnvbQ/exec"></iframe>
+
+<div id="overlay">
+  <h2>Bitácora Financiera</h2>
+  <p id="mensajeOverlay">Cargando…</p>
+  <button id="btnEntrar" style="display:none;">Entrar</button>
+</div>
+
+<iframe id="app" src="about:blank"></iframe>
 <div id="cortina"></div>
+
+<script>
+(function() {
+  // ⚠️ IMPORTANTE: Usa el ID de deployment que estás usando en el iframe.
+  var APP_URL = 'https://script.google.com/macros/s/AKfycbzxEalV4dhRmowsOK2_YOay1P6Lc-a9H0Dm_d9kmaQfdWkn7Bn553rSZ3XaZw6LMJnvbQ/exec';
+  var app = document.getElementById('app');
+  var cortina = document.getElementById('cortina');
+  var overlay = document.getElementById('overlay');
+  var btn = document.getElementById('btnEntrar');
+  var mensaje = document.getElementById('mensajeOverlay');
+  var autenticado = false;
+
+  // Si el JSONP responde, el usuario tiene sesión.
+  window.authSuccess = function() {
+    if (autenticado) return;
+    autenticado = true;
+    overlay.style.display = 'none';
+    app.src = APP_URL;
+    app.style.display = 'block';
+    cortina.style.display = 'block';
+  };
+
+  // Cargamos el JSONP para comprobar la sesión.
+  var s = document.createElement('script');
+  s.src = APP_URL + '?callback=authSuccess&_t=' + Date.now();
+  document.body.appendChild(s);
+
+  // Si en 3 segundos no responde, es iPhone/Safari bloqueando la cookie.
+  setTimeout(function() {
+    if (!autenticado) {
+      mensaje.textContent = 'Para entrar en iPhone, toca "Entrar" y autoriza el acceso.';
+      btn.style.display = 'block';
+      btn.addEventListener('click', function() {
+        // Esta es la única salida para iPhone: abrir el /exec directo.
+        // El banner aparecerá, pero es la única forma de autenticarse.
+        window.open(APP_URL, '_blank');
+      });
+    }
+  }, 3000);
+})();
+</script>
 </body>
 </html>
