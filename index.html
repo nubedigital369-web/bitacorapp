@@ -17,16 +17,12 @@ html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#0f17
   background:#0f172a; color:#f8fafc; font-family:sans-serif; z-index:20; text-align:center; padding:24px; box-sizing:border-box;
 }
 #overlay h2 { font-size:20px; margin:0 0 12px; }
-#overlay p { color:#94a3b8; font-size:14px; margin:0 0 24px; max-width:320px; line-height:1.5; }
-#btnEntrar { padding:14px 32px; border-radius:10px; border:none; background:#0284c7; color:#fff; font-size:16px; font-weight:600; cursor:pointer; }
 </style>
 </head>
 <body>
 
 <div id="overlay">
-  <h2>Bitácora Financiera</h2>
-  <p id="mensajeOverlay">Cargando…</p>
-  <button id="btnEntrar" style="display:none;">Entrar</button>
+  <h2>Cargando Bitácora Financiera…</h2>
 </div>
 
 <iframe id="app" src="about:blank"></iframe>
@@ -34,16 +30,14 @@ html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#0f17
 
 <script>
 (function() {
-  // ⚠️ IMPORTANTE: Usa el ID de deployment que estás usando en el iframe.
   var APP_URL = 'https://script.google.com/macros/s/AKfycbzxEalV4dhRmowsOK2_YOay1P6Lc-a9H0Dm_d9kmaQfdWkn7Bn553rSZ3XaZw6LMJnvbQ/exec';
   var app = document.getElementById('app');
   var cortina = document.getElementById('cortina');
   var overlay = document.getElementById('overlay');
-  var btn = document.getElementById('btnEntrar');
-  var mensaje = document.getElementById('mensajeOverlay');
   var autenticado = false;
 
-  // Si el JSONP responde, el usuario tiene sesión.
+  // Esta función la llama el doGet SIEMPRE (con o sin email).
+  // Como no lanza error, el script carga y entramos al iframe.
   window.authSuccess = function() {
     if (autenticado) return;
     autenticado = true;
@@ -53,23 +47,11 @@ html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#0f17
     cortina.style.display = 'block';
   };
 
-  // Cargamos el JSONP para comprobar la sesión.
+  // Ejecutamos el JSONP. Como el doGet siempre devuelve un JSON válido,
+  // esta función siempre llamará a authSuccess, incluso sin sesión de Google.
   var s = document.createElement('script');
   s.src = APP_URL + '?callback=authSuccess&_t=' + Date.now();
   document.body.appendChild(s);
-
-  // Si en 3 segundos no responde, es iPhone/Safari bloqueando la cookie.
-  setTimeout(function() {
-    if (!autenticado) {
-      mensaje.textContent = 'Para entrar en iPhone, toca "Entrar" y autoriza el acceso.';
-      btn.style.display = 'block';
-      btn.addEventListener('click', function() {
-        // Esta es la única salida para iPhone: abrir el /exec directo.
-        // El banner aparecerá, pero es la única forma de autenticarse.
-        window.open(APP_URL, '_blank');
-      });
-    }
-  }, 3000);
 })();
 </script>
 </body>
