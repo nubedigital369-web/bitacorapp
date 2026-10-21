@@ -15,22 +15,7 @@ html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#0f17
 </style>
 </head>
 <body>
-<iframe id="app"></iframe>
+<iframe id="app" src="https://script.google.com/macros/library/d/1X3Zf3M_HYYgIR6MUvTFnNiflMDv0hB6xs8kljUygwE86OOTpOWvJ3cs9/105"></iframe>
 <div id="cortina"></div>
-
-<script>
-const URL_APP = "https://script.google.com/macros/library/d/1X3Zf3M_HYYgIR6MUvTFnNiflMDv0hB6xs8kljUygwE86OOTpOWvJ3cs9/105";
-
-// iPhone, iPad (incluye iPadOS que se presenta como Mac con pantalla táctil)
-const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-              (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-
-if (esIOS) {
-  // Safari bloquea cookies de terceros en iframes: abrir en la misma pestaña
-  window.location.replace(URL_APP);
-} else {
-  document.getElementById("app").src = URL_APP;
-}
-</script>
 </body>
 </html>
